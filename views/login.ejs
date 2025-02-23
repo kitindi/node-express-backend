@@ -1,0 +1,36 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <header>
+      <h2><a href="/">Our StoryTelling App</a></h2>
+    </header>
+
+    <main>
+      <form action="/login" method="POST">
+        <% errors.forEach(error => { %>
+        <p class="notice"><%= error %></p>
+        <% }) %>
+        <fieldset>
+          <legend>Log In</legend>
+          <label for="username">Username</label>
+          <input type="text" name="username" id="eusername" />
+          <label for="password">password</label>
+          <input type="password" name="password" id="password" />
+          <br />
+          <button type="submit">Log In</button>
+          <div>
+            <a href="/">Dont have account yet? Sign Up </a>
+          </div>
+        </fieldset>
+      </form>
+    </main>
+    <footer>
+      <small>&copy; All Rights Reserved</small>
+    </footer>
+  </body>
+</html>
