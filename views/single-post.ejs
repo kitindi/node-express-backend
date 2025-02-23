@@ -25,11 +25,13 @@
           >posted by <%= post.username %> on: <%= new Date(post.createdDate).getDate() %> / <%= new Date(post.createdDate).getMonth() + 1 %> / <%= new
           Date(post.createdDate).getFullYear() %></small
         >
-        <div><%= post.body %></div>
+        <div><%- filteruserHtml(post.body) %></div>
       </article>
+      <% if (isAuthor){ %>
       <a href="/edit-post/<%= post.id %>" class="button">Edit Post</a>
-      <form action="" style="display: inline" action="/delete/<%= post.id %>" method="POST">
-        <button>Delete Post</button>
+      <form style="display: inline" action="/delete-post/<%= post.id %>" method="POST">
+        <button type="submit">Delete Post</button>
+        <% } %>
       </form>
     </main>
     <footer>
