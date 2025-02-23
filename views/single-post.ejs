@@ -19,15 +19,18 @@
     </header>
 
     <main>
-      <h3>Welcome to the Dashboard</h3>
-      <ul>
-        <% posts.forEach(post =>{ %>
-        <li>
-          <a href="/post/<%= post.id%>"><%= post.title %></a> on <%= new Date(post.createdDate).getDate() %> / <%= new Date(post.createdDate).getMonth() + 1 %>
-          / <%= new Date(post.createdDate).getFullYear() %>
-        </li>
-        <% }) %>
-      </ul>
+      <h3><%= post.title %></h3>
+      <article>
+        <small
+          >posted by <%= post.username %> on: <%= new Date(post.createdDate).getDate() %> / <%= new Date(post.createdDate).getMonth() + 1 %> / <%= new
+          Date(post.createdDate).getFullYear() %></small
+        >
+        <div><%= post.body %></div>
+      </article>
+      <a href="/edit-post/<%= post.id %>" class="button">Edit Post</a>
+      <form action="" style="display: inline" action="/delete/<%= post.id %>" method="POST">
+        <button>Delete Post</button>
+      </form>
     </main>
     <footer>
       <small>&copy; All Rights Reserved</small>

@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const sanitizeHtml = require("sanitize-html");
+const sanitizeHTML = require("sanitize-html");
 var cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -27,6 +27,17 @@ const createTable = db.transaction(() => {
       password TEXT NOT NULL
     );` // <-- Closing parenthesis and semicolon added
   ).run();
+
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      createdDate TEXT,
+      body TEXT NOT NULL,
+      authorid INTEGER NOT NULL,
+      FOREIGN KEY( authorid) REFERENCES users(id)
+    );` // <-- Closing parenthesis and semicolon added
+  ).run();
 });
 
 // Run the transaction to create the table
@@ -51,7 +62,10 @@ app.use(function (req, res, next) {
 
 app.get("/", (req, res) => {
   if (req.user) {
-    return res.render("dashboard", { user: req.user });
+    const postsStatements = db.prepare("SELECT * FROM posts WHERE authorid = ?");
+    const posts = postsStatements.all(req.user.userId);
+
+    return res.render("dashboard", { posts });
   }
   res.render("home");
 });
@@ -178,9 +192,6 @@ function mustBeLoggedIn(req, res, next) {
 app.get("/create-post", mustBeLoggedIn, (req, res) => {
   return res.render("create-post");
 });
-app.post("/create-post", mustBeLoggedIn, (req, res) => {
-  const errors = sharedPostValidation(req);
-});
 
 function sharedPostValidation(req) {
   const errors = [];
@@ -188,9 +199,43 @@ function sharedPostValidation(req) {
   if (typeof req.body.body !== "string") req.body.title = "";
 
   // trim - sanitize or strip out html
+  req.body.title = sanitizeHTML(req.body.title.trim(), { allowedTags: [], allowedAttributes: {} });
+  req.body.body = sanitizeHTML(req.body.body.trim(), { allowedTags: [], allowedAttributes: {} });
+
+  if (!req.body.title) errors.push("Title is required");
+  if (!req.body.body) errors.push("Body is required");
 
   return errors;
 }
+
+app.post("/create-post", mustBeLoggedIn, (req, res) => {
+  const errors = sharedPostValidation(req);
+
+  if (errors.length > 0) {
+    return res.render("create-post", { errors });
+  }
+
+  // save the post to the database
+  const insertQuery = db.prepare("INSERT INTO posts (title, body, authorid, createdDate) VALUES (?, ?, ?, ?)");
+  const result = insertQuery.run(req.body.title, req.body.body, req.user.userId, new Date().toISOString());
+
+  const getPostStatement = db.prepare("SELECT * FROM posts WHERE ROWID = ?");
+  const post = getPostStatement.get(result.lastInsertRowid);
+
+  return res.redirect(`/post/${post.id}`);
+});
+
+// fetch a single post from the database
+
+app.get("/post/:id", (req, res) => {
+  const postStatement = db.prepare("SELECT posts.*, users.username FROM posts  INNER JOIN users ON posts.authorid = users.id WHERE posts.id = ?");
+  const post = postStatement.get(req.params.id);
+  if (!post) {
+    return res.redirect("/");
+  }
+  res.render("single-post", { post });
+});
+
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
